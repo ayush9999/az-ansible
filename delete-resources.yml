@@ -1,0 +1,40 @@
+---
+- name: Delete Azure VM and associated resources using Azure CLI
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Delete VM
+      command: az vm delete --resource-group {{ resource_group }} --name {{ vm_name }} --yes
+      failed_when: false
+
+    - name: Delete network interface
+      command: az network nic delete --resource-group {{ resource_group }} --name {{ nic_name }}
+      failed_when: false
+
+    - name: Delete public IP address
+      command: az network public-ip delete --resource-group {{ resource_group }} --name {{ public_ip_name }}
+      failed_when: false
+
+    - name: Delete SSH security rule
+      command: az network nsg rule delete --resource-group {{ resource_group }} --nsg-name {{ nsg_name }} --name AllowSSH
+      failed_when: false
+
+    - name: Delete network security group
+      command: az network nsg delete --resource-group {{ resource_group }} --name {{ nsg_name }}
+      failed_when: false
+
+    - name: Delete subnet
+      command: az network vnet subnet delete --resource-group {{ resource_group }} --vnet-name {{ vnet_name }} --name {{ subnet_name }}
+      failed_when: false
+
+    - name: Delete virtual network
+      command: az network vnet delete --resource-group {{ resource_group }} --name {{ vnet_name }}
+      failed_when: false
+
+    - name: Delete resource group
+      command: az group delete --name {{ resource_group }} --yes
+      failed_when: false
+

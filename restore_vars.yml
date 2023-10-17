@@ -1,0 +1,11 @@
+resource_group: "YourResourceGroup"
+location: "YourLocation"
+disk_name: "DiskFromSnapshot"
+snapshot_name: "YourSnapshotName"
+snapshot_id: "/subscriptions/YourSubscriptionID/resourceGroups/YourResourceGroup/providers/Microsoft.Compute/snapshots/YourSnapshotName"
+vm_name: "YourNewVMName"
+vm_size: "Standard_B1s"
+admin_username: "YourAdminUsername"
+admin_password: "YourAdminPassword"
+nic_name: "YourNetworkInterfaceName"
+

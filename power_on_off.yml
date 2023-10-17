@@ -1,0 +1,40 @@
+---
+# Azure VM Power Management Playbook
+# 
+# To manually power off the VM:
+#   ansible-playbook power_management.yml -e "power_action=off_manual"
+# 
+# To manually power on the VM:
+#   ansible-playbook power_management.yml -e "power_action=on_manual"
+# 
+# To use the time-based power management, just run:
+#   ansible-playbook power_management.yml -e "power_action=on"
+# or
+#   ansible-playbook power_management.yml -e "power_action=off"
+# 
+# The time-based tasks will only power the VM on/off if the current hour is within the defined range.
+# For example, it'll power off between 10 PM (22 in 24-hour format) and 5 AM and power on between 6 AM and 9 PM.
+
+- name: Azure VM Power Management
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Power off VM at specific time range
+      command: az vm stop --resource-group {{ resource_group }} --name {{ vm_name }}
+      when: power_action == "off" and (ansible_date_time.hour|int >= 22 or ansible_date_time.hour|int <= 5)
+
+    - name: Power on VM at specific time range
+      command: az vm start --resource-group {{ resource_group }} --name {{ vm_name }}
+      when: power_action == "on" and (ansible_date_time.hour|int > 5 and ansible_date_time.hour|int < 22)
+
+    - name: Manually power off VM based on flag
+      command: az vm stop --resource-group {{ resource_group }} --name {{ vm_name }}
+      when: power_action == "off_manual"
+
+    - name: Manually power on VM based on flag
+      command: az vm start --resource-group {{ resource_group }} --name {{ vm_name }}
+      when: power_action == "on_manual"
+

@@ -1,0 +1,80 @@
+---
+- name: Create Azure VM using Azure CLI
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Check if resource group exists
+      command: "az group show --name {{ resource_group }}"
+      register: rg_check
+      failed_when: false
+      changed_when: false
+
+    - name: Ensure resource group exists using Azure CLI
+      command: "az group create --name {{ resource_group }} --location {{ location }}"
+      when: rg_check.rc != 0
+
+    - name: Check if virtual network exists
+      command: "az network vnet show --resource-group {{ resource_group }} --name {{ vnet_name }}"
+      register: vnet_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create virtual network
+      command: "az network vnet create --resource-group {{ resource_group }} --name {{ vnet_name }} --address-prefix {{ vnet_address_prefix }}"
+      when: vnet_check.rc != 0
+
+    - name: Check if subnet exists
+      command: "az network vnet subnet show --resource-group {{ resource_group }} --vnet-name {{ vnet_name }} --name {{ subnet_name }}"
+      register: subnet_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create subnet
+      command: "az network vnet subnet create --resource-group {{ resource_group }} --vnet-name {{ vnet_name }} --name {{ subnet_name }} --address-prefix {{ subnet_address_prefix }}"
+      when: subnet_check.rc != 0
+
+    - name: Check if network security group exists
+      command: "az network nsg show --resource-group {{ resource_group }} --name {{ nsg_name }}"
+      register: nsg_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create security group with SSH allowed
+      command: "az network nsg create --resource-group {{ resource_group }} --name {{ nsg_name }}"
+      when: nsg_check.rc != 0
+
+    - name: Add security rule for SSH
+      command: "az network nsg rule create --resource-group {{ resource_group }} --nsg-name {{ nsg_name }} --name AllowSSH --protocol tcp --direction inbound --priority 101 --source-address-prefix '*' --source-port-range '*' --destination-address-prefix '*' --destination-port-range 22 --access allow"
+
+    - name: Check if public IP exists
+      command: "az network public-ip show --resource-group {{ resource_group }} --name {{ public_ip_name }}"
+      register: publicip_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create public IP address
+      command: "az network public-ip create --resource-group {{ resource_group }} --name {{ public_ip_name }} --allocation-method Static"
+      when: publicip_check.rc != 0
+
+    - name: Check if network interface exists
+      command: "az network nic show --resource-group {{ resource_group }} --name {{ nic_name }}"
+      register: nic_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create network interface
+      command: "az network nic create --resource-group {{ resource_group }} --name {{ nic_name }} --vnet-name {{ vnet_name }} --subnet {{ subnet_name }} --network-security-group {{ nsg_name }} --public-ip-address {{ public_ip_name }}"
+      when: nic_check.rc != 0
+
+    - name: Check if VM exists
+      command: "az vm show --resource-group {{ resource_group }} --name {{ vm_name }}"
+      register: vm_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create VM
+      command: "az vm create --resource-group {{ resource_group }} --name {{ vm_name }} --size {{ vm_size }} --admin-username {{ vm_admin_username }} --admin-password {{ vm_admin_password }} --image {{ vm_image }} --nics {{ nic_name }}"
+      when: vm_check.rc != 0

@@ -1,0 +1,24 @@
+---
+- name: Create Azure VM from an existing Snapshot
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Check if the snapshot exists
+      command: az snapshot show --name {{ snapshot_name }} --resource-group {{ resource_group }}
+      register: snapshot_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create a managed disk from the snapshot
+      command: az disk create --name {{ disk_name }} --resource-group {{ resource_group }} --location {{ location }} --source {{ snapshot_id }}
+      register: disk_creation_result
+      when: snapshot_check.rc == 0
+
+    - name: Create a VM with the disk from snapshot
+      command: az vm create --resource-group {{ resource_group }} --location {{ location }} --name {{ vm_name }} --size {{ vm_size }} --os-disk {{ disk_name }} --admin-username {{ admin_username }} --admin-password {{ admin_password }} --nics {{ nic_name }}
+      when: disk_creation_result.rc == 0
+

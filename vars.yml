@@ -1,0 +1,16 @@
+---
+resource_group: myResourceGroup2
+location: eastus2
+vnet_name: myVnet
+vnet_address_prefix: 10.0.0.0/16
+subnet_name: mySubnet
+subnet_address_prefix: 10.0.1.0/24
+nsg_name: myNetworkSecurityGroup
+public_ip_name: myPublicIP
+nic_name: myNIC
+vm_name: myVM
+vm_size: Standard_B1s
+vm_admin_username: azureuser
+vm_admin_password: SecurePassword123!
+vm_image: Canonical:UbuntuServer:18.04-LTS:latest
+
